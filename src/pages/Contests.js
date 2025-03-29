@@ -23,7 +23,7 @@ function Contests() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const API_URL = process.env.API_URL || "http://localhost:3000/api";
+  const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
 
   useEffect(() => {
     fetchContests();
