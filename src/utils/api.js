@@ -1,5 +1,5 @@
-// const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
-const API_URL = process.env.API_URL || "http://localhost:3000/api";
+const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
+// const API_URL = process.env.API_URL || "http://localhost:3000/api";
 
 export const apiCall = async (endpoint, options = {}) => {
   try {
