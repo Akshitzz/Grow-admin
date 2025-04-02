@@ -1,11 +1,16 @@
-const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
+// const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
+const API_URL = process.env.API_URL || "http://localhost:3000/api";
 
 export const apiCall = async (endpoint, options = {}) => {
   try {
+    // Get the token from localStorage
+    const token = localStorage.getItem("token");
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     });
@@ -70,4 +75,28 @@ export default {
       method: "POST",
       body: JSON.stringify({ phoneNumber, otp }),
     }),
+  getAllUsers: () =>
+    apiCall("/admin/users", {
+      method: "GET",
+      headers: {
+        "Cache-Control": "no-cache",
+      },
+    }),
+  getUserDetails: (id) => apiCall(`/admin/users/${id}`),
+  updateUser: (id, data) =>
+    apiCall(`/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Admin specific methods
+  getAdminContests: () => apiCall("/admin/contests"),
+  getAdminContestDetails: (id) => apiCall(`/admin/contests/${id}`),
+  updateAdminContest: (id, data) =>
+    apiCall(`/admin/contests/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getAdminTeams: () => apiCall("/admin/teams"),
+  getDashboardStats: () => apiCall("/admin/dashboard/stats"),
 };

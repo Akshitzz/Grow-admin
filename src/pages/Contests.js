@@ -23,7 +23,8 @@ function Contests() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
+  // const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
+  const API_URL = process.env.API_URL || "http://localhost:3000/api";
 
   useEffect(() => {
     fetchContests();
@@ -34,11 +35,8 @@ function Contests() {
       setLoading(true);
       setError(null);
 
-      const data = leagueId
-        ? await api.getLeagueDetails(leagueId)
-        : await api.getContests();
-
-      setContests(leagueId ? data.contests : data.data);
+      const data = await api.getAdminContests();
+      setContests(data.data);
     } catch (error) {
       console.error("Error fetching contests:", error);
       setError(error.message);
@@ -49,7 +47,7 @@ function Contests() {
   };
 
   const handleViewContest = (id) => {
-    history.push(`${API_URL}/contests/${id}`);
+    history.push(`/app/contests/${id}`);
   };
 
   const handleCreateContest = () => {

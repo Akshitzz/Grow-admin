@@ -1,157 +1,252 @@
-import React, { useState, useEffect } from 'react'
-
-import CTA from '../components/CTA'
-import InfoCard from '../components/Cards/InfoCard'
-import ChartCard from '../components/Chart/ChartCard'
-import { Doughnut, Line } from 'react-chartjs-2'
-import ChartLegend from '../components/Chart/ChartLegend'
-import PageTitle from '../components/Typography/PageTitle'
-import { ChatIcon, CartIcon, MoneyIcon, PeopleIcon } from '../icons'
-import RoundIcon from '../components/RoundIcon'
-import response from '../utils/demo/tableData'
+import React, { useState, useEffect } from "react";
+import { Card, CardBody } from "@windmill/react-ui";
+import PageTitle from "../components/Typography/PageTitle";
 import {
-  TableBody,
-  TableContainer,
-  Table,
-  TableHeader,
-  TableCell,
-  TableRow,
-  TableFooter,
-  Avatar,
-  Badge,
-  Pagination,
-} from '@windmill/react-ui'
-
-import {
-  doughnutOptions,
-  lineOptions,
-  doughnutLegends,
-  lineLegends,
-} from '../utils/demo/chartsData'
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import api from "../utils/api";
 
 function Dashboard() {
-  const [page, setPage] = useState(1)
-  const [data, setData] = useState([])
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalTeams: 0,
+    totalContests: 0,
+    activeContests: 0,
+    totalPortfolios: 0,
+    totalVolume: 0,
+    monthlyData: [],
+    contestTypes: [],
+    userGrowth: [],
+    revenueData: [],
+  });
 
-  // pagination setup
-  const resultsPerPage = 10
-  const totalResults = response.length
-
-  // pagination change control
-  function onPageChange(p) {
-    setPage(p)
-  }
-
-  // on page change, load new sliced data
-  // here you would make another server request for new data
   useEffect(() => {
-    setData(response.slice((page - 1) * resultsPerPage, page * resultsPerPage))
-  }, [page])
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      // Simulate data since actual API isn't returning all stats
+      const baseData = await api.getDashboardStats();
+
+      // Enrich the data
+      const monthlyData = generateMonthlyData();
+      const contestTypes = generateContestTypes();
+      const userGrowth = generateUserGrowth();
+      const revenueData = generateRevenueData();
+
+      setStats({
+        ...baseData,
+        monthlyData,
+        contestTypes,
+        userGrowth,
+        revenueData,
+        totalVolume: calculateTotalVolume(),
+        totalPortfolios: calculateTotalPortfolios(),
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+    }
+  };
+
+  // Helper functions to generate mock data
+  const generateMonthlyData = () => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    return months.map((month) => ({
+      name: month,
+      users: Math.floor(Math.random() * 1000),
+      contests: Math.floor(Math.random() * 100),
+      revenue: Math.floor(Math.random() * 100000),
+    }));
+  };
+
+  const generateContestTypes = () => [
+    { name: "Stock", value: 45 },
+    { name: "Crypto", value: 30 },
+    { name: "Forex", value: 15 },
+    { name: "Commodity", value: 10 },
+  ];
+
+  const generateUserGrowth = () => {
+    const data = [];
+    for (let i = 0; i < 7; i++) {
+      data.push({
+        day: `Day ${i + 1}`,
+        users: Math.floor(Math.random() * 100) + 50,
+      });
+    }
+    return data;
+  };
+
+  const generateRevenueData = () => {
+    const data = [];
+    for (let i = 0; i < 12; i++) {
+      data.push({
+        month: `Month ${i + 1}`,
+        revenue: Math.floor(Math.random() * 100000),
+      });
+    }
+    return data;
+  };
+
+  const calculateTotalVolume = () => Math.floor(Math.random() * 1000000);
+  const calculateTotalPortfolios = () => Math.floor(Math.random() * 10000);
+
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
   return (
     <>
       <PageTitle>Dashboard</PageTitle>
 
-      <CTA />
-
-      {/* <!-- Cards --> */}
+      {/* Stats Cards */}
       <div className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
-        <InfoCard title="Total clients" value="6389">
-          <RoundIcon
-            icon={PeopleIcon}
-            iconColorClass="text-orange-500 dark:text-orange-100"
-            bgColorClass="bg-orange-100 dark:bg-orange-500"
-            className="mr-4"
-          />
-        </InfoCard>
+        <Card className="bg-purple-600">
+          <CardBody className="flex items-center">
+            <div>
+              <p className="mb-2 text-sm font-medium text-white">Total Users</p>
+              <p className="text-lg font-semibold text-white">
+                {stats.totalUsers}
+              </p>
+            </div>
+          </CardBody>
+        </Card>
 
-        <InfoCard title="Account balance" value="$ 46,760.89">
-          <RoundIcon
-            icon={MoneyIcon}
-            iconColorClass="text-green-500 dark:text-green-100"
-            bgColorClass="bg-green-100 dark:bg-green-500"
-            className="mr-4"
-          />
-        </InfoCard>
+        <Card className="bg-green-600">
+          <CardBody className="flex items-center">
+            <div>
+              <p className="mb-2 text-sm font-medium text-white">
+                Total Volume
+              </p>
+              <p className="text-lg font-semibold text-white">
+                ₹{stats.totalVolume?.toLocaleString()}
+              </p>
+            </div>
+          </CardBody>
+        </Card>
 
-        <InfoCard title="New sales" value="376">
-          <RoundIcon
-            icon={CartIcon}
-            iconColorClass="text-blue-500 dark:text-blue-100"
-            bgColorClass="bg-blue-100 dark:bg-blue-500"
-            className="mr-4"
-          />
-        </InfoCard>
+        <Card className="bg-blue-600">
+          <CardBody className="flex items-center">
+            <div>
+              <p className="mb-2 text-sm font-medium text-white">
+                Active Contests
+              </p>
+              <p className="text-lg font-semibold text-white">
+                {stats.activeContests}
+              </p>
+            </div>
+          </CardBody>
+        </Card>
 
-        <InfoCard title="Pending contacts" value="35">
-          <RoundIcon
-            icon={ChatIcon}
-            iconColorClass="text-teal-500 dark:text-teal-100"
-            bgColorClass="bg-teal-100 dark:bg-teal-500"
-            className="mr-4"
-          />
-        </InfoCard>
+        <Card className="bg-red-600">
+          <CardBody className="flex items-center">
+            <div>
+              <p className="mb-2 text-sm font-medium text-white">
+                Total Portfolios
+              </p>
+              <p className="text-lg font-semibold text-white">
+                {stats.totalPortfolios}
+              </p>
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
-      <TableContainer>
-        <Table>
-          <TableHeader>
-            <tr>
-              <TableCell>Client</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Date</TableCell>
-            </tr>
-          </TableHeader>
-          <TableBody>
-            {data.map((user, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <div className="flex items-center text-sm">
-                    <Avatar className="hidden mr-3 md:block" src={user.avatar} alt="User image" />
-                    <div>
-                      <p className="font-semibold">{user.name}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{user.job}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm">$ {user.amount}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge type={user.status}>{user.status}</Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm">{new Date(user.date).toLocaleDateString()}</span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TableFooter>
-          <Pagination
-            totalResults={totalResults}
-            resultsPerPage={resultsPerPage}
-            label="Table navigation"
-            onChange={onPageChange}
-          />
-        </TableFooter>
-      </TableContainer>
-
-      <PageTitle>Charts</PageTitle>
+      {/* Charts */}
       <div className="grid gap-6 mb-8 md:grid-cols-2">
-        <ChartCard title="Revenue">
-          <Doughnut {...doughnutOptions} />
-          <ChartLegend legends={doughnutLegends} />
-        </ChartCard>
+        <Card>
+          <CardBody>
+            <p className="mb-4 font-semibold text-gray-200">Monthly Overview</p>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.monthlyData}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip contentStyle={{ backgroundColor: "#1F2937" }} />
+                  <Area
+                    type="monotone"
+                    dataKey="users"
+                    stroke="#8884d8"
+                    fillOpacity={1}
+                    fill="url(#colorUsers)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardBody>
+        </Card>
 
-        <ChartCard title="Traffic">
-          <Line {...lineOptions} />
-          <ChartLegend legends={lineLegends} />
-        </ChartCard>
+        <Card>
+          <CardBody>
+            <p className="mb-4 font-semibold text-gray-200">
+              Contest Distribution
+            </p>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.contestTypes}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {stats.contestTypes.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: "#1F2937" }} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardBody>
+            <p className="mb-4 font-semibold text-gray-200">Revenue Trend</p>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="month" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip contentStyle={{ backgroundColor: "#1F2937" }} />
+                  <Bar dataKey="revenue" fill="#0694a2" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardBody>
+        </Card>
       </div>
     </>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

@@ -20,6 +20,16 @@ const ContestDetails = lazy(() => import("../pages/ContestDetails"));
 const Leagues = lazy(() => import("../pages/Leagues"));
 const CreateLeague = lazy(() => import("../pages/CreateLeague"));
 
+// Add User Management imports
+const UserDetails = lazy(() => import("../pages/UserDetails"));
+const EditUser = lazy(() => import("../pages/EditUser"));
+
+// Add Teams imports
+const Teams = lazy(() => import("../pages/Teams"));
+
+// Add Users import
+const Users = lazy(() => import("../pages/Users"));
+
 /**
  * ⚠ These are internal routes!
  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -32,8 +42,13 @@ const CreateLeague = lazy(() => import("../pages/CreateLeague"));
  */
 const routes = [
   {
-    path: "/dashboard",
+    path: "/dashboard", // this will be matched as /app/dashboard
     component: Dashboard,
+    exact: true,
+  },
+  {
+    path: "/users", // this will be matched as /app/users
+    component: Users,
     exact: true,
   },
   {
@@ -99,6 +114,21 @@ const routes = [
   {
     path: "/leagues/create",
     component: CreateLeague,
+    exact: true,
+  },
+  {
+    path: "/users/:id",
+    component: UserDetails,
+    exact: true,
+  },
+  {
+    path: "/users/:id/edit",
+    component: EditUser,
+    exact: true,
+  },
+  {
+    path: "/teams",
+    component: Teams,
     exact: true,
   },
 ];

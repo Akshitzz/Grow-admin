@@ -10,16 +10,17 @@
   },
   "dependencies": {
     "@windmill/react-ui": "0.3.1",
-    "chart.js": "2.9.3",
+    "chart.js": "^2.9.3",
     "classnames": "2.2.6",
     "faker": "4.1.0",
     "react": "^16.13.1",
-    "react-chartjs-2": "2.9.0",
+    "react-chartjs-2": "^2.9.0",
     "react-dom": "^16.13.1",
     "react-focus-lock": "2.4.0",
     "react-router-dom": "5.2.0",
     "react-scripts": "3.4.1",
-    "react-transition-group": "4.4.1"
+    "react-transition-group": "4.4.1",
+    "recharts": "^2.15.1"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "1.1.4",
