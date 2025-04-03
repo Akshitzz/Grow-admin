@@ -31,6 +31,21 @@ const routes = [
     icon: "PeopleIcon",
     name: "Recent Teams",
   },
+  {
+    path: "/app/privacy-policy",
+   icon: "PeopleIcon",
+    name: "Privacy Policy",
+  },
+  {
+    path: "/app/refund-policy",
+   icon: "PeopleIcon",
+    name: "Refund Policy",
+  },
+  {
+    path: "/app/terms-conditions",
+    icon: "PeopleIcon",
+    name: "Terms & Conditions",
+  },
   // {
   //   path: "/app/forms",
   //   icon: "FormsIcon",

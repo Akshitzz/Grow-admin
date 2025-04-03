@@ -29,7 +29,10 @@ const Teams = lazy(() => import("../pages/Teams"));
 
 // Add Users import
 const Users = lazy(() => import("../pages/Users"));
-
+// Add Policy and Terms imports
+const PrivacyPolicy = lazy(() => import("../pages/privacy-policy"));
+const RefundPolicy = lazy(() => import("../pages/refund-policy"));
+const TermsConditions = lazy(() => import("../pages/tnc"));
 /**
  * ⚠ These are internal routes!
  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -129,6 +132,21 @@ const routes = [
   {
     path: "/teams",
     component: Teams,
+    exact: true,
+  },
+  {
+    path: "/privacy-policy",
+    component: PrivacyPolicy,
+    exact: true,
+  },
+  {
+    path: "/refund-policy",
+    component: RefundPolicy,
+    exact: true,
+  },
+  {
+    path: "/terms-conditions",
+    component: TermsConditions,
     exact: true,
   },
 ];
