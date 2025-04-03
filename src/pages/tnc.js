@@ -9,6 +9,8 @@ function TermsAndConditions() {
   const [isEditing, setIsEditing] = useState(false);
   const [termsContent, setTermsContent] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const api = axios.create({
     // baseURL: "http://localhost:3000/api",
     baseURL: "https://growupp.onrender.com/api",
@@ -17,14 +19,16 @@ function TermsAndConditions() {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
   });
+
   useEffect(() => {
     const fetchTerms = async () => {
       try {
-        const response = await fetch("/api/terms-conditions");
-        const data = await response.json();
-        setTermsContent(data.terms.content);
+        const { data } = await api.get("/policies/terms-conditions");
+        setTermsContent(data.data || "");
+        setError(null);
       } catch (error) {
         console.error("Error fetching terms:", error);
+        setError("Failed to load terms and conditions");
       } finally {
         setLoading(false);
       }
@@ -34,18 +38,16 @@ function TermsAndConditions() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch("/api/terms-conditions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: termsContent }),
+      const { data } = await api.put("/policies/terms-conditions", {
+        content: termsContent,
       });
-      if (response.ok) {
+      if (data.success) {
         setIsEditing(false);
+        setError(null);
       }
     } catch (error) {
       console.error("Error saving terms:", error);
+      setError("Failed to save changes");
     }
   };
 
@@ -72,6 +74,7 @@ function TermsAndConditions() {
             </div>
           ) : (
             <>
+              {error && <div className="text-red-500 mb-4">{error}</div>}
               {isEditing ? (
                 <div>
                   <Textarea

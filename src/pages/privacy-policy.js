@@ -18,16 +18,17 @@ function PrivacyPolicy() {
   const [isEditing, setIsEditing] = useState(false);
   const [policyContent, setPolicyContent] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch privacy policy content
     const fetchPolicy = async () => {
       try {
-        const response = await fetch("/api/privacy-policy");
-        const data = await response.json();
-        setPolicyContent(data.policy.content);
+        const { data } = await api.get("/policies/privacy-policy");
+        setPolicyContent(data.data || "");
+        setError(null);
       } catch (error) {
         console.error("Error fetching privacy policy:", error);
+        setError("Failed to load privacy policy");
       } finally {
         setLoading(false);
       }
@@ -37,18 +38,16 @@ function PrivacyPolicy() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch("/api/privacy-policy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: policyContent }),
+      const { data } = await api.put("/policies/privacy-policy", {
+        content: policyContent,
       });
-      if (response.ok) {
+      if (data.success) {
         setIsEditing(false);
+        setError(null);
       }
     } catch (error) {
       console.error("Error saving privacy policy:", error);
+      setError("Failed to save changes");
     }
   };
 
@@ -100,6 +99,12 @@ function PrivacyPolicy() {
                 </div>
               )}
             </>
+          )}
+
+          {error && (
+            <div className="mt-4 text-sm text-red-500 dark:text-red-400">
+              {error}
+            </div>
           )}
 
           <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
