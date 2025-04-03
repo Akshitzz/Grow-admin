@@ -1,60 +1,56 @@
-import React, { useState, useEffect } from 'react'
-import PageTitle from '../components/Typography/PageTitle'
-import axios from 'axios'
-import {
-  Card,
-  CardBody,
-  Button,
-  Textarea,
-} from '@windmill/react-ui'
-import { EditIcon } from '../icons'
-import SectionTitle from '../components/Typography/SectionTitle'
+import React, { useState, useEffect } from "react";
+import PageTitle from "../components/Typography/PageTitle";
+import axios from "axios";
+import { Card, CardBody, Button, Textarea } from "@windmill/react-ui";
+import { EditIcon } from "../icons";
+import SectionTitle from "../components/Typography/SectionTitle";
 
 function PrivacyPolicy() {
   // Configure axios instance
   const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    // baseURL: 'http://localhost:3000/api',
+    baseURL: "https://growupp.onrender.com/api",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-  })
-  const [isEditing, setIsEditing] = useState(false)
-  const [policyContent, setPolicyContent] = useState('')
-  const [loading, setLoading] = useState(true)
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [policyContent, setPolicyContent] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch privacy policy content
     const fetchPolicy = async () => {
       try {
-        const response = await fetch('/api/privacy-policy')
-        const data = await response.json()
-        setPolicyContent(data.policy.content)
+        const response = await fetch("/api/privacy-policy");
+        const data = await response.json();
+        setPolicyContent(data.policy.content);
       } catch (error) {
-        console.error('Error fetching privacy policy:', error)
+        console.error("Error fetching privacy policy:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchPolicy()
-  }, [])
+    };
+    fetchPolicy();
+  }, []);
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/privacy-policy', {
-        method: 'POST',
+      const response = await fetch("/api/privacy-policy", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ content: policyContent }),
-      })
+      });
       if (response.ok) {
-        setIsEditing(false)
+        setIsEditing(false);
       }
     } catch (error) {
-      console.error('Error saving privacy policy:', error)
+      console.error("Error saving privacy policy:", error);
     }
-  }
+  };
 
   return (
     <>
@@ -88,12 +84,8 @@ function PrivacyPolicy() {
                     onChange={(e) => setPolicyContent(e.target.value)}
                   />
                   <div className="flex justify-end space-x-4">
-                    <Button onClick={() => setIsEditing(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSave}>
-                      Save Changes
-                    </Button>
+                    <Button onClick={() => setIsEditing(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Changes</Button>
                   </div>
                 </div>
               ) : (
@@ -116,7 +108,7 @@ function PrivacyPolicy() {
         </CardBody>
       </Card>
     </>
-  )
+  );
 }
 
-export default PrivacyPolicy
+export default PrivacyPolicy;

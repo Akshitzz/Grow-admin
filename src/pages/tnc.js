@@ -1,57 +1,53 @@
-import React, { useState, useEffect } from 'react'
-import PageTitle from '../components/Typography/PageTitle'
-import SectionTitle from '../components/Typography/SectionTitle'
-import axios from 'axios'
-import {
-  Card,
-  CardBody,
-  Button,
-  Textarea,
-} from '@windmill/react-ui'
-import { EditIcon } from '../icons'
+import React, { useState, useEffect } from "react";
+import PageTitle from "../components/Typography/PageTitle";
+import SectionTitle from "../components/Typography/SectionTitle";
+import axios from "axios";
+import { Card, CardBody, Button, Textarea } from "@windmill/react-ui";
+import { EditIcon } from "../icons";
 
 function TermsAndConditions() {
-  const [isEditing, setIsEditing] = useState(false)
-  const [termsContent, setTermsContent] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false);
+  const [termsContent, setTermsContent] = useState("");
+  const [loading, setLoading] = useState(true);
   const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    // baseURL: "http://localhost:3000/api",
+    baseURL: "https://growupp.onrender.com/api",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-  })
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
   useEffect(() => {
     const fetchTerms = async () => {
       try {
-        const response = await fetch('/api/terms-conditions')
-        const data = await response.json()
-        setTermsContent(data.terms.content)
+        const response = await fetch("/api/terms-conditions");
+        const data = await response.json();
+        setTermsContent(data.terms.content);
       } catch (error) {
-        console.error('Error fetching terms:', error)
+        console.error("Error fetching terms:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchTerms()
-  }, [])
+    };
+    fetchTerms();
+  }, []);
 
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/terms-conditions', {
-        method: 'POST',
+      const response = await fetch("/api/terms-conditions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ content: termsContent }),
-      })
+      });
       if (response.ok) {
-        setIsEditing(false)
+        setIsEditing(false);
       }
     } catch (error) {
-      console.error('Error saving terms:', error)
+      console.error("Error saving terms:", error);
     }
-  }
+  };
 
   return (
     <>
@@ -85,12 +81,13 @@ function TermsAndConditions() {
                     onChange={(e) => setTermsContent(e.target.value)}
                   />
                   <div className="flex justify-end space-x-4">
-                    <Button layout="outline" onClick={() => setIsEditing(false)}>
+                    <Button
+                      layout="outline"
+                      onClick={() => setIsEditing(false)}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleSave}>
-                      Save Changes
-                    </Button>
+                    <Button onClick={handleSave}>Save Changes</Button>
                   </div>
                 </div>
               ) : (
@@ -99,14 +96,16 @@ function TermsAndConditions() {
                     1. Acceptance of Terms
                   </h2>
                   <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    By accessing and using this platform, you accept and agree to be bound by the terms and provision of this agreement.
+                    By accessing and using this platform, you accept and agree
+                    to be bound by the terms and provision of this agreement.
                   </p>
 
                   <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                     2. User Responsibilities
                   </h2>
                   <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    Users must provide accurate information and maintain the security of their account credentials.
+                    Users must provide accurate information and maintain the
+                    security of their account credentials.
                   </p>
 
                   <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
@@ -122,7 +121,8 @@ function TermsAndConditions() {
                     4. Prohibited Activities
                   </h2>
                   <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    Users shall not engage in any fraudulent activities or violate platform rules.
+                    Users shall not engage in any fraudulent activities or
+                    violate platform rules.
                   </p>
                 </div>
               )}
@@ -135,7 +135,7 @@ function TermsAndConditions() {
         </CardBody>
       </Card>
     </>
-  )
+  );
 }
 
-export default TermsAndConditions
+export default TermsAndConditions;
