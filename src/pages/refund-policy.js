@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PageTitle from "../components/Typography/PageTitle";
 import SectionTitle from "../components/Typography/SectionTitle";
-import { Card, CardBody, Button, Textarea } from "@windmill/react-ui";
+import { Card, CardBody, Button } from "@windmill/react-ui";
 import { EditIcon } from "../icons";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 function RefundPolicy() {
   const [isEditing, setIsEditing] = useState(false);
@@ -13,7 +15,7 @@ function RefundPolicy() {
 
   // Configure axios instance
   const api = axios.create({
-    // baseURL: 'http://localhost:3000/api',
+    // baseURL: "http://localhost:3000/api",
     baseURL: "https://growupp.onrender.com/api",
     headers: {
       "Content-Type": "application/json",
@@ -52,6 +54,31 @@ function RefundPolicy() {
     }
   };
 
+  // Rich text editor modules configuration
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ color: [] }, { background: [] }],
+      ["link"],
+      ["clean"],
+    ],
+  };
+
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "list",
+    "bullet",
+    "color",
+    "background",
+    "link",
+  ];
+
   return (
     <>
       <PageTitle>Refund Policy</PageTitle>
@@ -77,13 +104,17 @@ function RefundPolicy() {
             <>
               {isEditing ? (
                 <div>
-                  <Textarea
-                    className="mb-4"
-                    rows="10"
-                    value={policyContent}
-                    onChange={(e) => setPolicyContent(e.target.value)}
-                  />
-                  <div className="flex justify-end space-x-4">
+                  <div className="mb-4 text-white">
+                    <ReactQuill
+                      theme="snow"
+                      value={policyContent}
+                      onChange={setPolicyContent}
+                      modules={modules}
+                      formats={formats}
+                      className="bg-white dark:bg-gray-800 min-h-[300px]"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-4 mt-12">
                     <Button
                       layout="outline"
                       onClick={() => setIsEditing(false)}
@@ -94,12 +125,12 @@ function RefundPolicy() {
                   </div>
                 </div>
               ) : (
-                <div className="prose dark:prose-dark max-w-none">
+                <div className="prose dark:prose-dark max-w-none text-white">
                   {policyContent ? (
                     <div dangerouslySetInnerHTML={{ __html: policyContent }} />
                   ) : (
-                    <div className="text-gray-600 dark:text-gray-400">
-                      <h2 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    <div className="text-zinc-200">
+                      <h2 className="mb-4 text-lg font-semibold text-zinc-200">
                         1. Refund Eligibility
                       </h2>
                       <p className="mb-4">
@@ -107,7 +138,7 @@ function RefundPolicy() {
                         the original purchase of the product.
                       </p>
 
-                      <h2 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                      <h2 className="mb-4 text-lg font-semibold text-zinc-200">
                         2. Refund Process
                       </h2>
                       <p className="mb-4">
@@ -116,7 +147,7 @@ function RefundPolicy() {
                         requests within 5-7 business days.
                       </p>
 
-                      <h2 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                      <h2 className="mb-4 text-lg font-semibold text-zinc-200">
                         3. Non-refundable Items
                       </h2>
                       <ul className="mb-4 list-disc list-inside">
@@ -132,7 +163,7 @@ function RefundPolicy() {
                         </li>
                       </ul>
 
-                      <h2 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                      <h2 className="mb-4 text-lg font-semibold text-zinc-200">
                         4. Payment Method
                       </h2>
                       <p className="mb-4">
@@ -140,7 +171,7 @@ function RefundPolicy() {
                         used for the original purchase.
                       </p>
 
-                      <h2 className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                      <h2 className="mb-4 text-lg font-semibold text-zinc-200">
                         5. Contact Information
                       </h2>
                       <p className="mb-4">

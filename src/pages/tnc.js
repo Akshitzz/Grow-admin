@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import PageTitle from "../components/Typography/PageTitle";
 import SectionTitle from "../components/Typography/SectionTitle";
 import axios from "axios";
-import { Card, CardBody, Button, Textarea } from "@windmill/react-ui";
+import { Card, CardBody, Button } from "@windmill/react-ui";
 import { EditIcon } from "../icons";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 function TermsAndConditions() {
   const [isEditing, setIsEditing] = useState(false);
@@ -51,6 +53,31 @@ function TermsAndConditions() {
     }
   };
 
+  // Rich text editor modules configuration
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ color: [] }, { background: [] }],
+      ["link"],
+      ["clean"],
+    ],
+  };
+
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "list",
+    "bullet",
+    "color",
+    "background",
+    "link",
+  ];
+
   return (
     <>
       <PageTitle>Terms and Conditions</PageTitle>
@@ -77,13 +104,17 @@ function TermsAndConditions() {
               {error && <div className="text-red-500 mb-4">{error}</div>}
               {isEditing ? (
                 <div>
-                  <Textarea
-                    className="mb-4"
-                    rows="10"
-                    value={termsContent}
-                    onChange={(e) => setTermsContent(e.target.value)}
-                  />
-                  <div className="flex justify-end space-x-4">
+                  <div className="mb-4 text-white">
+                    <ReactQuill
+                      theme="snow"
+                      value={termsContent}
+                      onChange={setTermsContent}
+                      modules={modules}
+                      formats={formats}
+                      className="bg-white dark:bg-gray-800 min-h-[300px]"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-4 mt-12">
                     <Button
                       layout="outline"
                       onClick={() => setIsEditing(false)}
@@ -94,39 +125,46 @@ function TermsAndConditions() {
                   </div>
                 </div>
               ) : (
-                <div className="prose dark:prose-dark max-w-none">
-                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    1. Acceptance of Terms
-                  </h2>
-                  <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    By accessing and using this platform, you accept and agree
-                    to be bound by the terms and provision of this agreement.
-                  </p>
+                <div className="prose dark:prose-dark max-w-none text-white">
+                  {termsContent ? (
+                    <div dangerouslySetInnerHTML={{ __html: termsContent }} />
+                  ) : (
+                    <div className="text-zinc-200">
+                      <h2 className="text-lg font-semibold text-zinc-200">
+                        1. Acceptance of Terms
+                      </h2>
+                      <p className="mb-4 text-zinc-200">
+                        By accessing and using this platform, you accept and
+                        agree to be bound by the terms and provision of this
+                        agreement.
+                      </p>
 
-                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    2. User Responsibilities
-                  </h2>
-                  <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    Users must provide accurate information and maintain the
-                    security of their account credentials.
-                  </p>
+                      <h2 className="text-lg font-semibold text-zinc-200">
+                        2. User Responsibilities
+                      </h2>
+                      <p className="mb-4 text-zinc-200">
+                        Users must provide accurate information and maintain the
+                        security of their account credentials.
+                      </p>
 
-                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    3. Platform Rules
-                  </h2>
-                  <ul className="list-disc list-inside mb-4 text-gray-600 dark:text-gray-400">
-                    <li className="mb-2">Follow fair play guidelines</li>
-                    <li className="mb-2">Respect other users</li>
-                    <li className="mb-2">Maintain account security</li>
-                  </ul>
+                      <h2 className="text-lg font-semibold text-zinc-200">
+                        3. Platform Rules
+                      </h2>
+                      <ul className="list-disc list-inside mb-4 text-zinc-200">
+                        <li className="mb-2">Follow fair play guidelines</li>
+                        <li className="mb-2">Respect other users</li>
+                        <li className="mb-2">Maintain account security</li>
+                      </ul>
 
-                  <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    4. Prohibited Activities
-                  </h2>
-                  <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    Users shall not engage in any fraudulent activities or
-                    violate platform rules.
-                  </p>
+                      <h2 className="text-lg font-semibold text-zinc-200">
+                        4. Prohibited Activities
+                      </h2>
+                      <p className="mb-4 text-zinc-200">
+                        Users shall not engage in any fraudulent activities or
+                        violate platform rules.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </>
