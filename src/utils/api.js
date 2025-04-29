@@ -34,21 +34,12 @@ export default {
     return apiCall(`/contests`);
   },
   createContest: (data) => {
-    // Helper to subtract 5 hours 30 minutes
-    const subtractFiveAndHalfHours = (dateStr) => {
-      if (!dateStr) return dateStr;
-      const date = new Date(dateStr);
-      // Subtract 5 hours 30 minutes in ms
-      date.setTime(date.getTime() - (5 * 60 + 30) * 60 * 1000);
-      return date.toISOString(); // or keep the original format if needed
-    };
-
     const formattedData = {
       ...data,
       leagueId: data.leagueId, // Add league ID
-      startDate: subtractFiveAndHalfHours(data.startDate),
-      endDate: subtractFiveAndHalfHours(data.endDate),
-      stockSelectionDeadline: subtractFiveAndHalfHours(data.stockSelectionDeadline),
+      startDate: data.startDate,
+      endDate: data.endDate,
+      stockSelectionDeadline: data.stockSelectionDeadline,
     };
 
     console.log(
