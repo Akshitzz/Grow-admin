@@ -15,10 +15,12 @@ const Blank = lazy(() => import("../pages/Blank"));
 const Contests = lazy(() => import("../pages/Contests"));
 const CreateContest = lazy(() => import("../pages/CreateContest"));
 const ContestDetails = lazy(() => import("../pages/ContestDetails"));
+const EditContest = lazy(() => import("../pages/EditContest"));
 
 // Add Leagues imports
 const Leagues = lazy(() => import("../pages/Leagues"));
 const CreateLeague = lazy(() => import("../pages/CreateLeague"));
+const EditLeague = lazy(() => import("../pages/EditLeague"));
 
 // Add User Management imports
 const UserDetails = lazy(() => import("../pages/UserDetails"));
@@ -110,6 +112,11 @@ const routes = [
     exact: true,
   },
   {
+    path: "/contests/edit/:id",
+    component: EditContest,
+    exact: true,
+  },
+  {
     path: "/leagues",
     component: Leagues,
     exact: true,
@@ -117,6 +124,11 @@ const routes = [
   {
     path: "/leagues/create",
     component: CreateLeague,
+    exact: true,
+  },
+  {
+    path: "/leagues/edit/:id",
+    component: EditLeague,
     exact: true,
   },
   {

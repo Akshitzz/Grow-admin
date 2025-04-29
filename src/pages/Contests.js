@@ -50,6 +50,10 @@ function Contests() {
     history.push(`/app/contests/${id}`);
   };
 
+  const handleEditContest = (id) => {
+    history.push(`/app/contests/edit/${id}`);
+  };
+
   const handleCreateContest = () => {
     history.push("/app/contests/create");
   };
@@ -90,6 +94,8 @@ function Contests() {
                 <TableCell>Participants</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Prize Pool</TableCell>
+                <TableCell>Leaderboard</TableCell>
+                <TableCell>Points</TableCell>
                 <TableCell>Actions</TableCell>
               </tr>
             </TableHeader>
@@ -136,6 +142,12 @@ function Contests() {
                       })()}
                     </TableCell>
                     <TableCell>
+                      {contest.participants?.length || 0}
+                    </TableCell>
+                    <TableCell>
+                      {contest.status?.averageReturns || 0}%
+                    </TableCell>
+                    <TableCell>
                       <div className="flex space-x-2">
                         <Button
                           layout="link"
@@ -144,7 +156,11 @@ function Contests() {
                         >
                           View
                         </Button>
-                        <Button layout="link" size="small">
+                        <Button 
+                          layout="link" 
+                          size="small"
+                          onClick={() => handleEditContest(contest._id)}
+                        >
                           Edit
                         </Button>
                       </div>
