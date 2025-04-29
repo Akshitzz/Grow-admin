@@ -99,4 +99,8 @@ export default {
     }),
   getAdminTeams: () => apiCall("/admin/teams"),
   getDashboardStats: () => apiCall("/admin/dashboard/stats"),
+  deleteContest: (id) =>
+    apiCall(`/admin/contests/${id}`, {
+      method: "DELETE",
+    }),
 };

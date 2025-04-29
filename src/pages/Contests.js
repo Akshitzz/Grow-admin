@@ -11,6 +11,10 @@ import {
   Badge,
   Button,
   Pagination,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "@windmill/react-ui";
 import { useHistory, useParams } from "react-router-dom";
 import api from "../utils/api";
@@ -22,6 +26,8 @@ function Contests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [contestToDelete, setContestToDelete] = useState(null);
 
   // const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
   // const API_URL = process.env.API_URL || "http://localhost:3000/api";
@@ -56,6 +62,24 @@ function Contests() {
 
   const handleCreateContest = () => {
     history.push("/app/contests/create");
+  };
+
+  const handleDeleteClick = (contest) => {
+    setContestToDelete(contest);
+    setDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await api.deleteContest(contestToDelete._id);
+      setContests(contests.filter(contest => contest._id !== contestToDelete._id));
+      setDeleteModal(false);
+      setContestToDelete(null);
+      alert("Contest deleted successfully");
+    } catch (error) {
+      console.error("Error deleting contest:", error);
+      alert(`Error deleting contest: ${error.message}`);
+    }
   };
 
   return (
@@ -163,6 +187,13 @@ function Contests() {
                         >
                           Edit
                         </Button>
+                        <Button
+                          layout="link"
+                          size="small"
+                          onClick={() => handleDeleteClick(contest)}
+                        >
+                          Delete
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -179,6 +210,21 @@ function Contests() {
           </TableFooter>
         </TableContainer>
       )}
+
+      <Modal isOpen={deleteModal} toggle={() => setDeleteModal(false)}>
+        <ModalHeader toggle={() => setDeleteModal(false)}>Confirm Delete</ModalHeader>
+        <ModalBody>
+          Are you sure you want to delete the contest "{contestToDelete?.name}"? This action cannot be undone.
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button color="danger" onClick={handleDeleteConfirm}>
+            Delete
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }
