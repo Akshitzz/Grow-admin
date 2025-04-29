@@ -19,7 +19,7 @@ function CreateContest() {
     name: "",
     description: "",
     type: "STOCK",
-    entryFee: 0,
+    entryFee: "", // Changed from 0 to empty string
     maxParticipants: 2,
     startDate: new Date().toISOString().slice(0, 16), // Initialize with current date-time
     endDate: new Date(Date.now() + 86400000).toISOString().slice(0, 16), // Next day
@@ -162,11 +162,12 @@ function CreateContest() {
                   className="mt-1"
                   type="number"
                   min="0"
+                  placeholder="Enter entry fee"
                   value={formData.entryFee}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      entryFee: Number(e.target.value),
+                      entryFee: e.target.value === "" ? "" : Number(e.target.value),
                     })
                   }
                   required
@@ -184,7 +185,7 @@ function CreateContest() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      maxParticipants: Number(e.target.value),
+                      maxParticipants: e.target.value === "" ? "" : Number(e.target.value),
                     })
                   }
                   required
@@ -203,7 +204,7 @@ function CreateContest() {
                       ...formData,
                       prizePool: {
                         ...formData.prizePool,
-                        totalAmount: Number(e.target.value),
+                        totalAmount: e.target.value === "" ? "" : Number(e.target.value),
                       },
                     })
                   }
