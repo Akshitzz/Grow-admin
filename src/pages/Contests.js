@@ -23,7 +23,7 @@ function Contests() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
+  // const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
   // const API_URL = process.env.API_URL || "http://localhost:3000/api";
 
   useEffect(() => {
@@ -119,12 +119,21 @@ function Contests() {
                       {contest.participantsCount || 0}/{contest.maxParticipants}
                     </TableCell>
                     <TableCell>
-                      <Badge type={getStatusBadgeType(contest.status)}>
-                        {contest.status}
+                      <Badge type={getStatusBadgeType(contest.status?.status || 'upcoming')}>
+                        {contest.status?.status || 'upcoming'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      ₹{contest.prizePool?.totalAmount || 0}
+                      {(() => {
+                        if (!contest.prizePool) return '₹0';
+                        if (typeof contest.prizePool === 'object' && contest.prizePool.totalAmount) {
+                          return `₹${contest.prizePool.totalAmount}`;
+                        }
+                        if (typeof contest.status === 'object' && contest.status.totalPrizePool) {
+                          return `₹${contest.status.totalPrizePool}`;
+                        }
+                        return `₹${contest.entryFee * contest.maxParticipants}`;
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
