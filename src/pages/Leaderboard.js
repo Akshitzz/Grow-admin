@@ -11,13 +11,13 @@ import {
   Button,
   Pagination,
 } from '@windmill/react-ui';
-import { EditIcon, TrashIcon } from '../icons';
 import api from '../utils/api';
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [page, setPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -31,10 +31,13 @@ function Leaderboard() {
       setError(null);
       const response = await api.getLeaderboard(page);
       
-      // Ensure we have an array of data
-      const data = Array.isArray(response) ? response : [];
-      setLeaderboardData(data);
-      setTotalResults(data.length);
+      if (response.success) {
+        setLeaderboardData(response.data || []);
+        setTotalResults(response.pagination?.totalUsers || 0);
+        setTotalPages(response.pagination?.totalPages || 1);
+      } else {
+        throw new Error('Failed to fetch leaderboard data');
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       setError('Failed to load leaderboard data');
@@ -63,10 +66,10 @@ function Leaderboard() {
             <tr>
               <TableCell>Rank</TableCell>
               <TableCell>User</TableCell>
-              <TableCell>Contest</TableCell>
-              <TableCell>League</TableCell>
-              <TableCell>Winnings</TableCell>
-              <TableCell>Date</TableCell>
+              <TableCell>Total Winnings</TableCell>
+              <TableCell>Contests Won</TableCell>
+              <TableCell>Contests Joined</TableCell>
+              <TableCell>Win Rate</TableCell>
             </tr>
           </TableHeader>
           <TableBody>
@@ -84,33 +87,31 @@ function Leaderboard() {
               </TableRow>
             ) : (
               leaderboardData.map((entry, index) => (
-                <TableRow key={entry.id || index}>
+                <TableRow key={entry.username || index}>
                   <TableCell>
                     <span className="text-sm">#{index + 1}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center text-sm">
                       <div>
-                        <p className="font-semibold">{entry.userName || 'Unknown User'}</p>
+                        <p className="font-semibold">{entry.fullName || 'Unknown User'}</p>
                         <p className="text-xs text-gray-600 dark:text-gray-400">
-                          {entry.userPhone || 'N/A'}
+                          @{entry.username || 'N/A'}
                         </p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{entry.contestName || 'N/A'}</span>
+                    <Badge type="success">₹{entry.totalWinnings || 0}</Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{entry.leagueName || 'N/A'}</span>
+                    <span className="text-sm">{entry.totalContestsWon || 0}</span>
                   </TableCell>
                   <TableCell>
-                    <Badge type="success">₹{entry.winnings || 0}</Badge>
+                    <span className="text-sm">{entry.totalContestsJoined || 0}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">
-                      {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : 'N/A'}
-                    </span>
+                    <span className="text-sm">{entry.winRate || 0}%</span>
                   </TableCell>
                 </TableRow>
               ))
