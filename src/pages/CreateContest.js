@@ -11,6 +11,21 @@ import {
 } from "@windmill/react-ui";
 import api from "../utils/api";
 
+// Utility: Convert Date to IST and format as yyyy-MM-ddTHH:mm for datetime-local input
+function toISTLocalString(date) {
+  const IST_OFFSET = 5.5 * 60; // minutes
+  // Convert to IST
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+  const ist = new Date(utc + (IST_OFFSET * 60000));
+  // Format for datetime-local input
+  const yyyy = ist.getFullYear();
+  const MM = String(ist.getMonth() + 1).padStart(2, '0');
+  const dd = String(ist.getDate()).padStart(2, '0');
+  const hh = String(ist.getHours()).padStart(2, '0');
+  const mm = String(ist.getMinutes()).padStart(2, '0');
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+}
+
 function CreateContest() {
   const history = useHistory();
   const [leagues, setLeagues] = useState([]);
@@ -21,9 +36,9 @@ function CreateContest() {
     type: "STOCK",
     entryFee: "", // Changed from 0 to empty string
     maxParticipants: 2,
-    startDate: new Date().toISOString().slice(0, 16), // Initialize with current date-time
-    endDate: new Date(Date.now() + 86400000).toISOString().slice(0, 16), // Next day
-    stockSelectionDeadline: new Date().toISOString().slice(0, 16), // Initialize with current date-time
+    startDate: toISTLocalString(new Date()), // Initialize with current IST date-time
+    endDate: toISTLocalString(new Date(Date.now() + 86400000)), // Next day IST
+    stockSelectionDeadline: toISTLocalString(new Date()), // Initialize with current IST date-time
     prizePool: {
       totalAmount: 0,
       distribution: [
@@ -48,46 +63,48 @@ function CreateContest() {
     fetchLeagues();
   }, []);
 
+  // Always treat input as IST string
   const handleDateChange = (field, value) => {
     setFormData((prev) => {
-      const updates = { ...prev, [field]: value };
-
-      // Ensure logical date order
-      if (field === "startDate" && new Date(value) > new Date(prev.endDate)) {
+      let updates = { ...prev, [field]: value };
+      // Ensure logical date order (all values are IST strings)
+      if (field === "startDate" && value > prev.endDate) {
         updates.endDate = value;
         updates.stockSelectionDeadline = value;
       }
-
-      if (field === "endDate" && new Date(value) < new Date(prev.startDate)) {
+      if (field === "endDate" && value < prev.startDate) {
         updates.endDate = prev.startDate;
       }
-
       if (field === "stockSelectionDeadline") {
-        const selectionDate = new Date(value);
-        const startDate = new Date(prev.startDate);
-        const endDate = new Date(prev.endDate);
-
-        if (selectionDate < startDate) {
+        if (value < prev.startDate) {
           updates.stockSelectionDeadline = prev.startDate;
         }
-        if (selectionDate > endDate) {
+        if (value > prev.endDate) {
           updates.stockSelectionDeadline = prev.endDate;
         }
       }
-
       return updates;
     });
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      console.log("Submitting contest data:", formData);
-      const response = await api.createContest(formData);
-
+      // Convert IST datetime-local strings to ISO8601 with +05:30 offset before sending
+      const convertToISTISOString = (dtStr) => {
+        // dtStr is in 'yyyy-MM-ddTHH:mm' assumed IST, so manually add offset
+        return dtStr + ":00+05:30";
+      };
+      const payload = {
+        ...formData,
+        startDate: convertToISTISOString(formData.startDate),
+        endDate: convertToISTISOString(formData.endDate),
+        stockSelectionDeadline: convertToISTISOString(formData.stockSelectionDeadline),
+      };
+      console.log("Submitting contest data (IST):", payload);
+      const response = await api.createContest(payload);
       console.log("Server response:", response);
-
       // Navigate back to contests page after successful creation
       history.push("/app/contests");
     } catch (error) {
@@ -95,6 +112,7 @@ function CreateContest() {
       alert(error.message || "Failed to create contest");
     }
   };
+
 
   return (
     <>
@@ -224,7 +242,7 @@ function CreateContest() {
                 <Input
                   className="mt-1"
                   type="datetime-local"
-                  min={new Date().toISOString().slice(0, 16)}
+                  min={toISTLocalString(new Date())}
                   value={formData.startDate}
                   onChange={(e) =>
                     handleDateChange("startDate", e.target.value)
