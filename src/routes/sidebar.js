@@ -32,13 +32,18 @@ const routes = [
     name: "Recent Teams",
   },
   {
+    path: "/app/leaderboard",
+    icon: "MoneyIcon",
+    name: "Leaderboard",
+  },
+  {
     path: "/app/privacy-policy",
-   icon: "PeopleIcon",
+    icon: "PeopleIcon",
     name: "Privacy Policy",
   },
   {
     path: "/app/refund-policy",
-   icon: "PeopleIcon",
+    icon: "PeopleIcon",
     name: "Refund Policy",
   },
   {

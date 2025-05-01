@@ -103,4 +103,37 @@ export default {
     apiCall(`/admin/contests/${id}`, {
       method: "DELETE",
     }),
+
+  // Leaderboard endpoints
+  getLeaderboard: async (page = 1) => {
+    try {
+      const response = await apiCall(`/leaderboard?page=${page}`);
+      console.log('Leaderboard API Response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error in getLeaderboard:', error);
+      throw error;
+    }
+  },
+
+  // Contest and League management
+  updateLeague: async (leagueId, leagueData) => {
+    const response = await fetch(`${API_URL}/api/leagues/${leagueId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(leagueData),
+    });
+    const responseData = await response.json();
+    return responseData;
+  },
+
+  deleteLeague: async (leagueId) => {
+    const response = await fetch(`${API_URL}/api/leagues/${leagueId}`, {
+      method: "DELETE",
+    });
+    const responseData = await response.json();
+    return responseData;
+  },
 };

@@ -31,6 +31,10 @@ const Teams = lazy(() => import("../pages/Teams"));
 
 // Add Users import
 const Users = lazy(() => import("../pages/Users"));
+
+// Add new imports
+const Leaderboard = lazy(() => import("../pages/Leaderboard"));
+
 // Add Policy and Terms imports
 const PrivacyPolicy = lazy(() => import("../pages/privacy-policy"));
 const RefundPolicy = lazy(() => import("../pages/refund-policy"));
@@ -159,6 +163,11 @@ const routes = [
   {
     path: "/terms-conditions",
     component: TermsConditions,
+    exact: true,
+  },
+  {
+    path: "/leaderboard",
+    component: Leaderboard,
     exact: true,
   },
 ];
