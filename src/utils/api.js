@@ -170,4 +170,11 @@ export default {
     const responseData = await response.json();
     return responseData;
   },
+
+  // Add login endpoint
+  login: (credentials) =>
+    apiCall("/auth/admin/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    }),
 };
