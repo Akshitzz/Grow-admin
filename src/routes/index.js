@@ -39,6 +39,10 @@ const Leaderboard = lazy(() => import("../pages/Leaderboard"));
 const PrivacyPolicy = lazy(() => import("../pages/privacy-policy"));
 const RefundPolicy = lazy(() => import("../pages/refund-policy"));
 const TermsConditions = lazy(() => import("../pages/tnc"));
+
+// Add CreateMegaContest import
+const CreateMegaContest = lazy(() => import("../pages/CreateMegaContest"));
+
 /**
  * ⚠ These are internal routes!
  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -168,6 +172,11 @@ const routes = [
   {
     path: "/leaderboard",
     component: Leaderboard,
+    exact: true,
+  },
+  {
+    path: "/contests/create-mega",
+    component: CreateMegaContest,
     exact: true,
   },
 ];

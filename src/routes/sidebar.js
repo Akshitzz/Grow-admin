@@ -25,6 +25,12 @@ const routes = [
     path: "/app/contests",
     icon: "MoneyIcon", // Using MoneyIcon for contests
     name: "Contests",
+    routes: [
+      {
+        path: "/app/contests/create-mega",
+        name: "Create Mega Contest",
+      },
+    ],
   },
   {
     path: "/app/teams",

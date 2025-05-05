@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import PageTitle from "../components/Typography/PageTitle";
 import {
   Card,
@@ -11,42 +11,96 @@ import {
   TableBody,
   TableRow,
   TableContainer,
+  Button,
 } from "@windmill/react-ui";
 import api from "../utils/api";
 
 // Add this safety check function
 const safeArray = (arr) => (Array.isArray(arr) ? arr : []);
+const safeNumber = (num) => (typeof num === 'number' ? num : 0);
+const safeString = (str) => (typeof str === 'string' ? str : '');
 
 function ContestDetails() {
   const { id } = useParams();
+  const history = useHistory();
   const [contest, setContest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [loadingPortfolios, setLoadingPortfolios] = useState(true);
 
   useEffect(() => {
-    fetchContestDetails();
-  }, [id]);
-
-  const fetchContestDetails = async () => {
-    try {
-      setLoading(true);
-      setLoadingPortfolios(true);
-      const data = await api.getAdminContestDetails(id);
-      setContest(data.data);
-      setError(null);
-    } catch (error) {
-      console.error("Error:", error);
-      setError("Failed to load contest details");
-    } finally {
-      setLoading(false);
-      setLoadingPortfolios(false);
+    // Immediately redirect if it's a create-mega route
+    if (id === 'create-mega') {
+      history.push('/app/contests/create');
+      return;
     }
-  };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-  if (!contest) return <div>Contest not found</div>;
+    const fetchContestDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.getAdminContestDetails(id);
+        
+        if (!response || !response.data) {
+          throw new Error("Invalid response format");
+        }
+
+        // Format dates to IST
+        const contestData = {
+          ...response.data,
+          startDate: response.data.startDate ? new Date(response.data.startDate).toISOString() : null,
+          endDate: response.data.endDate ? new Date(response.data.endDate).toISOString() : null,
+          stockSelectionDeadline: response.data.stockSelectionDeadline ? new Date(response.data.stockSelectionDeadline).toISOString() : null
+        };
+
+        setContest(contestData);
+      } catch (error) {
+        console.error("Error fetching contest details:", error);
+        setError(error.message || "Failed to load contest details");
+        if (error.message.includes("unauthorized") || error.message.includes("no token")) {
+          history.push("/login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContestDetails();
+  }, [id, history]);
+
+  // If we're redirecting, don't render anything
+  if (id === 'create-mega') {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-gray-400 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-red-500 mb-4">{error}</div>
+        <Button onClick={() => history.push("/app/contests")}>
+          Back to Contests
+        </Button>
+      </div>
+    );
+  }
+
+  if (!contest) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-gray-500 mb-4">Contest not found</div>
+        <Button onClick={() => history.push("/app/contests")}>
+          Back to Contests
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -61,8 +115,8 @@ function ContestDetails() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-300">Status</p>
-                <Badge type={getStatusBadgeType(contest.status)}>
-                  {contest.status}
+                <Badge type={getStatusBadgeType(contest.status?.status || 'upcoming')}>
+                  {contest.status?.status || 'upcoming'}
                 </Badge>
               </div>
               <div>
@@ -73,12 +127,12 @@ function ContestDetails() {
               </div>
               <div>
                 <p className="text-sm text-gray-300">Entry Fee</p>
-                <p className="font-semibold text-white">₹{contest.entryFee}</p>
+                <p className="font-semibold text-white">₹{safeNumber(contest.entryFee)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-300">Participants</p>
                 <p className="font-semibold text-white">
-                  {contest.participantsCount}/{contest.maxParticipants}
+                  {safeNumber(contest.participantsCount)}/{safeNumber(contest.maxParticipants)}
                 </p>
               </div>
             </div>
@@ -92,28 +146,26 @@ function ContestDetails() {
               <div>
                 <p className="text-sm text-gray-300">Start Date</p>
                 <p className="font-semibold text-white">
-                  {new Date(contest.startDate).toLocaleDateString()}
+                  {contest.startDate ? new Date(contest.startDate).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-300">End Date</p>
                 <p className="font-semibold text-white">
-                  {new Date(contest.endDate).toLocaleDateString()}
+                  {contest.endDate ? new Date(contest.endDate).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-300">Selection Deadline</p>
                 <p className="font-semibold text-white">
-                  {new Date(
-                    contest.stockSelectionDeadline
-                  ).toLocaleDateString()}
+                  {contest.stockSelectionDeadline ? new Date(contest.stockSelectionDeadline).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </div>
           </CardBody>
         </Card>
 
-        <Card className="md:col-span-2 text-white">
+        <Card className="text-white">
           <CardBody>
             <h3 className="text-lg font-semibold mb-4 text-white">
               Prize Pool Details
@@ -128,14 +180,14 @@ function ContestDetails() {
                   </tr>
                 </TableHeader>
                 <TableBody className="text-white">
-                  {contest.prizePool?.distribution?.map((prize) => (
+                  {safeArray(contest.prizePool?.distribution).map((prize) => (
                     <TableRow key={prize.rank}>
                       <TableCell className="text-white">{prize.rank}</TableCell>
                       <TableCell className="text-white">
-                        {prize.percentage}%
+                        {safeNumber(prize.percentage)}%
                       </TableCell>
                       <TableCell className="text-white">
-                        ₹{prize.amount}
+                        ₹{safeNumber(prize.amount)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -144,112 +196,6 @@ function ContestDetails() {
             </div>
           </CardBody>
         </Card>
-
-        {loadingPortfolios ? (
-          <Card className="md:col-span-2">
-            <CardBody>
-              <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            </CardBody>
-          </Card>
-        ) : (
-          <>
-            {safeArray(contest.portfolios).length > 0 && (
-              <Card className="md:col-span-2 text-white">
-                <CardBody>
-                  <h3 className="text-lg font-semibold mb-4 text-white">
-                    Participants ({contest.portfolios.length})
-                  </h3>
-                  <TableContainer>
-                    <Table>
-                      <TableHeader>
-                        <tr className="text-white">
-                          <TableCell className="text-white">User</TableCell>
-                          <TableCell className="text-white">
-                            Portfolio Value
-                          </TableCell>
-                          <TableCell className="text-white">Returns</TableCell>
-                          <TableCell className="text-white">
-                            Stock Selections
-                          </TableCell>
-                          <TableCell className="text-white">
-                            Join Date
-                          </TableCell>
-                          <TableCell className="text-white">Status</TableCell>
-                        </tr>
-                      </TableHeader>
-                      <TableBody className="text-white">
-                        {safeArray(contest.portfolios).map((portfolio) => (
-                          <TableRow key={portfolio._id}>
-                            <TableCell>
-                              <div className="flex items-center text-sm">
-                                <div>
-                                  <p className="font-semibold text-white">
-                                    {portfolio.userId?.fullName}
-                                  </p>
-                                  <p className="text-xs text-gray-300">
-                                    @{portfolio.userId?.username}
-                                  </p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-white">
-                                ₹{portfolio.currentValue?.toLocaleString()}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                type={
-                                  portfolio.returns >= 0 ? "success" : "danger"
-                                }
-                              >
-                                {portfolio.returns?.toFixed(2)}%
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-2">
-                                {portfolio.stockSelections?.map((stock) => (
-                                  <Badge
-                                    key={stock.symbol}
-                                    type="neutral"
-                                    className="text-xs"
-                                  >
-                                    <div className="flex flex-col items-center">
-                                      <span>{stock.symbol}</span>
-                                      <span className="text-xs text-gray-300">
-                                        {stock.quantity} qty
-                                      </span>
-                                    </div>
-                                  </Badge>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-white">
-                                {new Date(
-                                  portfolio.createdAt
-                                ).toLocaleDateString()}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                type={getPortfolioStatusType(portfolio.status)}
-                              >
-                                {portfolio.status}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </CardBody>
-              </Card>
-            )}
-          </>
-        )}
 
         <Card className="md:col-span-2 text-white">
           <CardBody>
@@ -260,30 +206,89 @@ function ContestDetails() {
               <div>
                 <p className="text-sm text-gray-300">Average Returns</p>
                 <p className="text-xl font-bold text-white">
-                  {contest.stats?.averageReturns?.toFixed(2)}%
+                  {safeNumber(contest.stats?.averageReturns).toFixed(2)}%
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-300">Highest Return</p>
                 <p className="text-xl font-bold text-white">
-                  {contest.stats?.highestReturn?.toFixed(2)}%
+                  {safeNumber(contest.stats?.highestReturn).toFixed(2)}%
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-300">Total Participants</p>
                 <p className="text-xl font-bold text-white">
-                  {contest.stats?.totalParticipants}/{contest.maxParticipants}
+                  {safeNumber(contest.stats?.totalParticipants)}/{safeNumber(contest.maxParticipants)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-300">Collected Amount</p>
                 <p className="text-xl font-bold text-white">
-                  ₹{contest.stats?.collectedAmount?.toLocaleString()}
+                  ₹{safeNumber(contest.stats?.collectedAmount).toLocaleString()}
                 </p>
               </div>
             </div>
           </CardBody>
         </Card>
+
+        {safeArray(contest.portfolios).length > 0 && (
+          <Card className="md:col-span-2 text-white">
+            <CardBody>
+              <h3 className="text-lg font-semibold mb-4 text-white">
+                Participants ({contest.portfolios.length})
+              </h3>
+              <TableContainer>
+                <Table>
+                  <TableHeader>
+                    <tr className="text-white">
+                      <TableCell className="text-white">User</TableCell>
+                      <TableCell className="text-white">Portfolio Value</TableCell>
+                      <TableCell className="text-white">Returns</TableCell>
+                      <TableCell className="text-white">Join Date</TableCell>
+                      <TableCell className="text-white">Status</TableCell>
+                    </tr>
+                  </TableHeader>
+                  <TableBody>
+                    {safeArray(contest.portfolios).map((portfolio) => (
+                      <TableRow key={portfolio._id}>
+                        <TableCell>
+                          <div className="flex items-center text-sm">
+                            <div>
+                              <p className="font-semibold text-white">
+                                {portfolio.userId?.fullName || 'N/A'}
+                              </p>
+                              <p className="text-xs text-gray-300">
+                                @{portfolio.userId?.username || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-white">
+                            ₹{safeNumber(portfolio.currentValue).toLocaleString()}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge type={safeNumber(portfolio.returns) >= 0 ? "success" : "danger"}>
+                            {safeNumber(portfolio.returns).toFixed(2)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {portfolio.createdAt ? new Date(portfolio.createdAt).toLocaleDateString() : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge type={portfolio.status === 'active' ? 'success' : 'warning'}>
+                            {portfolio.status || 'pending'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardBody>
+          </Card>
+        )}
       </div>
     </>
   );
@@ -301,19 +306,6 @@ function getStatusBadgeType(status) {
       return "neutral";
     case "cancelled":
       return "danger";
-    default:
-      return "neutral";
-  }
-}
-
-function getPortfolioStatusType(status) {
-  switch (status) {
-    case "active":
-      return "success";
-    case "pending":
-      return "warning";
-    case "completed":
-      return "primary";
     default:
       return "neutral";
   }

@@ -36,10 +36,11 @@ export default {
   createContest: (data) => {
     const formattedData = {
       ...data,
-      leagueId: data.leagueId, // Add league ID
+      leagueId: data.leagueId,
       startDate: data.startDate,
       endDate: data.endDate,
       stockSelectionDeadline: data.stockSelectionDeadline,
+      megaContest: data.megaContest || false,
     };
 
     console.log(
@@ -99,7 +100,32 @@ export default {
         method: "PATCH",
       }),
   getAdminContests: () => apiCall("/admin/contests"),
-  getAdminContestDetails: (id) => apiCall(`/admin/contests/${id}`),
+  getAdminContestDetails: async (id) => {
+    try {
+      const response = await apiCall(`/admin/contests/${id}`);
+      // Check if response exists and has data property
+      if (!response) {
+        throw new Error("No response from server");
+      }
+      // If response is already in the correct format (has data property), return it
+      if (response.data) {
+        return response;
+      }
+      // If response is the data itself, wrap it in a data property
+      return { data: response };
+    } catch (error) {
+      console.error("Error in getAdminContestDetails:", error);
+      // Check if error is from the API response
+      if (error.response) {
+        throw new Error(error.response.message || "Failed to fetch contest details");
+      }
+      // Check if error is from network or other issues
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error("Failed to fetch contest details");
+    }
+  },
   updateAdminContest: (id, data) =>
     apiCall(`/admin/contests/${id}`, {
       method: "PUT",

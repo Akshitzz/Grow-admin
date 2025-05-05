@@ -100,8 +100,11 @@ function Contests() {
       <PageTitle>Contests</PageTitle>
 
       <div className="flex justify-between mb-8">
-        <div>
-          <Button onClick={handleCreateContest}>Create New Contest</Button>
+        <div className="space-x-4">
+          <Button onClick={handleCreateContest}>Create Contest</Button>
+          <Button onClick={() => history.push("/app/contests/create-mega")}>
+            Create Mega Contest
+          </Button>
         </div>
       </div>
 
