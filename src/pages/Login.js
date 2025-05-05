@@ -9,33 +9,49 @@ import { useAuth } from "../context/AuthContext";
 function Login() {
   const history = useHistory();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1); // 1 for phone, 2 for OTP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleSendOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      // Make API call to verify credentials
-      const response = await api.login({ email, password });
-      
-      if (!response || !response.user) {
+      await api.sendOTP(phoneNumber);
+      setStep(2);
+    } catch (error) {
+      setError(error.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.verifyOTP(phoneNumber, otp);
+      console.log("Auth Response:", response); // Add this debug log
+
+      if (!response.user) {
         throw new Error("Invalid response from server");
       }
 
       if (response.user.role !== "admin") {
-        throw new Error("Access denied. Admin access required.");
+        throw new Error(`Access denied. Role: ${response.user.role}`);
       }
 
       await login(response);
       history.push("/app");
     } catch (error) {
-      console.error("Login error:", error);
-      setError(error.message || "Login failed");
+      console.error("Login error:", error); // Add this debug log
+      setError(error.message || "Invalid OTP");
     } finally {
       setLoading(false);
     }
@@ -71,40 +87,62 @@ function Login() {
                 </div>
               )}
 
-              <form onSubmit={handleLogin}>
-                <Label>
-                  <span>Email</span>
-                  <Input
-                    className="mt-1"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </Label>
+              {step === 1 ? (
+                <form onSubmit={handleSendOTP}>
+                  <Label>
+                    <span>Phone Number</span>
+                    <Input
+                      className="mt-1"
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      required
+                    />
+                  </Label>
 
-                <Label className="mt-4">
-                  <span>Password</span>
-                  <Input
-                    className="mt-1"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </Label>
+                  <Button
+                    className="mt-4"
+                    block
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? "Sending..." : "Send OTP"}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOTP}>
+                  <Label>
+                    <span>Enter OTP</span>
+                    <Input
+                      className="mt-1"
+                      type="text"
+                      placeholder="Enter OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      required
+                    />
+                  </Label>
 
-                <Button
-                  className="mt-4"
-                  block
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Login"}
-                </Button>
-              </form>
+                  <Button
+                    className="mt-4"
+                    block
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? "Verifying..." : "Verify OTP"}
+                  </Button>
+
+                  <Button
+                    className="mt-4"
+                    block
+                    layout="outline"
+                    onClick={() => setStep(1)}
+                  >
+                    Back to Phone Number
+                  </Button>
+                </form>
+              )}
             </div>
           </main>
         </div>

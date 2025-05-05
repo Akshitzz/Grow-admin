@@ -6,13 +6,20 @@ export const apiCall = async (endpoint, options = {}) => {
     // Get the token from localStorage
     const token = localStorage.getItem("token");
 
+    // Skip Authorization header for login endpoint
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+
+    // Only add Authorization header if we have a token and it's not a login request
+    if (token && !endpoint.includes("/auth/admin/login")) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
+      headers,
     });
 
     const data = await response.json();
