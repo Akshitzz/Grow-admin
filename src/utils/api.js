@@ -88,8 +88,16 @@ export default {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-
-  // Admin specific methods
+    // Admin specific methods
+    
+    deleteUser: (id) =>
+      apiCall(`/admin/users/${id}`, {
+        method: "DELETE",
+      }),
+    BlockUser: (id) =>
+      apiCall(`/admin/users/${id}/block`, {
+        method: "PATCH",
+      }),
   getAdminContests: () => apiCall("/admin/contests"),
   getAdminContestDetails: (id) => apiCall(`/admin/contests/${id}`),
   updateAdminContest: (id, data) =>

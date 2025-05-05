@@ -21,11 +21,12 @@ function Users() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
 
   useEffect(() => {
     fetchUsers();
-  }, [page]);
+  }, []); // Remove page dependency to fetch all users at once
 
   const fetchUsers = async () => {
     try {
@@ -39,20 +40,21 @@ function Users() {
       // Transform and enrich the data
       const enrichedUsers = (response.data || []).map((user) => ({
         ...user,
-        isActive: user.lastLoginAt
-          ? new Date(user.lastLoginAt) >
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-          : false,
-        status: user.status || "active",
-        portfolioCount: user.portfolios?.length || 0,
-        contestCount: user.contests?.length || 0,
-        totalWinnings:
-          user.portfolios?.reduce((acc, p) => acc + (p.winnings || 0), 0) || 0,
+        isActive: user.accountStatus === "active",
         joinedDate: new Date(user.createdAt).toLocaleDateString(),
-        winCount: user.portfolios?.filter((p) => p.winnings > 0).length || 0,
+        performanceStats: {
+          totalContests: user.performanceMetrics?.totalContestsJoined || 0,
+          totalWins: user.performanceMetrics?.totalContestsWon || 0,
+          winRate: user.performanceMetrics?.winRate || 0,
+          totalWinnings: user.performanceMetrics?.totalWinnings || 0,
+          highestRank: user.performanceMetrics?.highestRank || 0,
+        },
+        portfolioCount: user.portfolios?.length || 0,
+        contestCount: user.contestsParticipated?.length || 0,
       }));
 
       setUsers(enrichedUsers);
+      setTotalResults(enrichedUsers.length);
       setError(null);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -62,6 +64,10 @@ function Users() {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -69,6 +75,19 @@ function Users() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  // Calculate pagination
+  const startIndex = (page - 1) * resultsPerPage;
+  const endIndex = startIndex + resultsPerPage;
+  const paginatedUsers = users.slice(startIndex, endIndex);
 
   return (
     <>
@@ -81,80 +100,88 @@ function Users() {
                 <tr className="text-white">
                   <TableCell>User</TableCell>
                   <TableCell>Contact</TableCell>
-                  <TableCell>Activity</TableCell>
-                  <TableCell>Portfolio Stats</TableCell>
+                  <TableCell>Performance</TableCell>
+                  <TableCell>Wallet & Points</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Actions</TableCell>
                 </tr>
               </TableHeader>
               <TableBody>
-                {users
-                  .slice((page - 1) * resultsPerPage, page * resultsPerPage)
-                  .map((user) => (
-                    <TableRow key={user._id}>
-                      <TableCell>
-                        <div className="flex flex-col text-white">
-                          <span className="font-semibold">{user.fullName}</span>
-                          <span className="text-xs text-gray-400">
-                            @{user.username}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            Joined: {user.joinedDate}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-white">
-                          <span>{user.email}</span>
-                          <span className="text-xs text-gray-400">
-                            {user.phoneNumber}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-white">
-                          <span>{user.contestCount} Contests</span>
-                          <span className="text-xs text-gray-400">
-                            {user.portfolioCount} Portfolios
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-white">
-                          <span>₹{user.totalWinnings.toLocaleString()}</span>
-                          <span className="text-xs text-gray-400">
-                            Win Rate:{" "}
-                            {(
-                              (user.contestCount > 0
-                                ? user.winCount / user.contestCount
-                                : 0) * 100
-                            ).toFixed(1)}
-                            %
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
+                {paginatedUsers.map((user) => (
+                  <TableRow key={user._id}>
+                    <TableCell>
+                      <div className="flex flex-col text-white">
+                        <span className="font-semibold">{user.fullName}</span>
+                        <span className="text-xs text-gray-400">
+                          @{user.username}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Joined: {user.joinedDate}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col text-white">
+                        <span>{user.email}</span>
+                        <span className="text-xs text-gray-400">
+                          {user.phoneNumber}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Ref: {user.referralCode}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col text-white">
+                        <span>Contests: {user.performanceStats?.totalContests || 0}</span>
+                        <span className="text-xs text-gray-400">
+                          Wins: {user.performanceStats?.totalWins || 0}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Win Rate: {user.performanceStats?.winRate || 0}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col text-white">
+                        <span>₹{(user.walletBalance || 0).toLocaleString()}</span>
+                        <span className="text-xs text-gray-400">
+                          Virtual: ₹{(user.virtualFunds || 0).toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Points: {user.loyaltyPoints || 0}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
                         <Badge type={user.isActive ? "success" : "danger"}>
-                          {user.isActive ? "Active" : "Inactive"}
+                          {user.accountStatus}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Link to={`/app/users/${user._id}`}>
-                          <Button layout="link" size="small">
-                            View Details
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <Badge type={user.kycDetails?.isVerified ? "success" : "warning"} className="mt-1">
+                          {user.kycDetails?.isVerified ? "KYC Verified" : "KYC Pending"}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Link to={`/app/users/${user._id}`}>
+                        <Button layout="link" size="small">
+                          View Details
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
-            <Pagination
-              totalResults={users.length}
-              resultsPerPage={resultsPerPage}
-              onChange={setPage}
-              label="Users navigation"
-            />
+            <div className="mt-4">
+              <Pagination
+                totalResults={totalResults}
+                resultsPerPage={resultsPerPage}
+                onChange={handlePageChange}
+                label="Users navigation"
+              />
+            </div>
           </TableContainer>
         </CardBody>
       </Card>

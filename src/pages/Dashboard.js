@@ -181,7 +181,7 @@ function Dashboard() {
                       {contest.entryFee}
                     </p>
                   </div>
-                  <Badge type={STATUS_COLORS[contest.status]}>
+                  <Badge className="bg-white" type={STATUS_COLORS[contest.status]}>
                     {contest.status}
                   </Badge>
                 </div>

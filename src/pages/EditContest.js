@@ -68,27 +68,27 @@ function EditContest() {
     setFormData((prev) => {
       const updates = { ...prev, [field]: value };
 
-      if (field === "startDate" && new Date(value) > new Date(prev.endDate)) {
-        updates.endDate = value;
-        updates.stockSelectionDeadline = value;
-      }
+      // if (field === "startDate" && new Date(value) > new Date(prev.endDate)) {
+      //   updates.endDate = value;
+      //   updates.stockSelectionDeadline = value;
+      // }
 
-      if (field === "endDate" && new Date(value) < new Date(prev.startDate)) {
-        updates.endDate = prev.startDate;
-      }
+      // if (field === "endDate" && new Date(value) < new Date(prev.startDate)) {
+      //   updates.endDate = prev.startDate;
+      // }
 
-      if (field === "stockSelectionDeadline") {
-        const selectionDate = new Date(value);
-        const startDate = new Date(prev.startDate);
-        const endDate = new Date(prev.endDate);
+      // if (field === "stockSelectionDeadline") {
+      //   const selectionDate = new Date(value);
+      //   const startDate = new Date(prev.startDate);
+      //   const endDate = new Date(prev.endDate);
 
-        if (selectionDate < startDate) {
-          updates.stockSelectionDeadline = prev.startDate;
-        }
-        if (selectionDate > endDate) {
-          updates.stockSelectionDeadline = prev.endDate;
-        }
-      }
+      //   if (selectionDate < startDate) {
+      //     updates.stockSelectionDeadline = prev.startDate;
+      //   }
+      //   if (selectionDate > endDate) {
+      //     updates.stockSelectionDeadline = prev.endDate;
+      //   }
+      // }
 
       return updates;
     });
@@ -260,7 +260,7 @@ function EditContest() {
                 <Input
                   className="mt-1"
                   type="datetime-local"
-                  min={formData.startDate}
+                  // min={formData.startDate}
                   max={formData.endDate}
                   value={formData.stockSelectionDeadline}
                   onChange={(e) =>

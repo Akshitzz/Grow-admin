@@ -8,6 +8,10 @@ import {
   Button,
   Card,
   CardBody,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "@windmill/react-ui";
 import api from "../utils/api";
 
@@ -21,6 +25,9 @@ function EditUser() {
     phoneNumber: "",
     accountStatus: "active",
   });
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [blockModal, setBlockModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -52,6 +59,7 @@ function EditUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await api.updateUser(id, formData);
       history.push(`/app/users/${id}`);
@@ -63,6 +71,47 @@ function EditUser() {
       ) {
         history.push("/login");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setLoading(true);
+    try {
+      await api.deleteUser(id);
+      history.push("/app/users");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user. Please try again.");
+    } finally {
+      setLoading(false);
+      setDeleteModal(false);
+    }
+  };
+
+  const handleBlockClick = () => {
+    setBlockModal(true);
+  };
+
+  const handleBlockConfirm = async () => {
+    setLoading(true);
+    try {
+      await api.BlockUser(id);
+      // Refresh user data after blocking
+      const data = await api.getUserDetails(id);
+      const { username, email, fullName, phoneNumber, accountStatus } = data.data;
+      setFormData({ username, email, fullName, phoneNumber, accountStatus });
+      setBlockModal(false);
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      alert("Failed to block user. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,8 +176,6 @@ function EditUser() {
                   onChange={handleChange}
                 >
                   <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="suspended">Suspended</option>
                   <option value="blocked">Blocked</option>
                 </Select>
               </Label>
@@ -139,14 +186,81 @@ function EditUser() {
                 type="button"
                 layout="outline"
                 onClick={() => history.goBack()}
+                disabled={loading}
               >
                 Cancel
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button
+                type="button"
+                layout="outline"
+                onClick={handleBlockClick}
+                disabled={loading}
+              >
+                {formData.accountStatus === "active" ? "Block User" : "Unblock User"}
+              </Button>
+              <Button
+                type="button"
+                layout="outline"
+                onClick={handleDeleteClick}
+                disabled={loading}
+              >
+                Delete User
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
           </form>
         </CardBody>
       </Card>
+
+      <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)}>
+        <ModalHeader>Confirm Delete</ModalHeader>
+        <ModalBody>
+          Are you sure you want to delete this user? This action cannot be undone.
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            layout="outline"
+            onClick={() => setDeleteModal(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            layout="danger"
+            onClick={handleDeleteConfirm}
+            disabled={loading}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={blockModal} onClose={() => setBlockModal(false)}>
+        <ModalHeader>
+          {formData.accountStatus === "active" ? "Block User" : "Unblock User"}
+        </ModalHeader>
+        <ModalBody>
+          Are you sure you want to {formData.accountStatus === "active" ? "block" : "unblock"} this user?
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            layout="outline"
+            onClick={() => setBlockModal(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            layout="warning"
+            onClick={handleBlockConfirm}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : formData.accountStatus === "active" ? "Block" : "Unblock"}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

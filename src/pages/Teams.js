@@ -18,25 +18,42 @@ import {
 import api from "../utils/api";
 
 function Teams() {
+  const [allTeams, setAllTeams] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
 
   useEffect(() => {
     fetchTeams();
-  }, [page]);
+  }, []); // Only fetch on initial load
+
+  useEffect(() => {
+    // Update paginated teams when page changes
+    const startIndex = (page - 1) * resultsPerPage;
+    const endIndex = startIndex + resultsPerPage;
+    setTeams(allTeams.slice(startIndex, endIndex));
+  }, [page, allTeams]);
 
   const fetchTeams = async () => {
     try {
       setLoading(true);
       const response = await api.getAdminTeams();
-      setTeams(response.data);
+      if (!response || !response.data) {
+        throw new Error("Invalid response format");
+      }
+
+      setAllTeams(response.data);
+      setTotalResults(response.data.length);
       setError(null);
     } catch (error) {
       console.error("Error:", error);
       setError("Failed to load teams");
+      setAllTeams([]);
+      setTeams([]);
+      setTotalResults(0);
     } finally {
       setLoading(false);
     }
@@ -81,73 +98,71 @@ function Teams() {
                   <TableCell className="">Actions</TableCell>
                 </tr>
               </TableHeader>
-              <TableBody className="">
-                {teams
-                  .slice((page - 1) * resultsPerPage, page * resultsPerPage)
-                  .map((team) => (
-                    <TableRow key={team._id} className="">
-                      <TableCell>
-                        <div className="flex flex-col ">
-                          <span className="text-sm">
-                            {team.userId?.fullName}
-                          </span>
-                          <span className="text-xs text-gray-300">
-                            @{team.userId?.username}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col ">
-                          <span className="text-sm">
-                            {team.contestId?.name}
-                          </span>
-                          <span className="text-xs text-gray-300">
-                            Entry: ₹{team.contestId?.entryFee}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{team.captain}</TableCell>
-                      <TableCell className="text-sm">
-                        {team.viceCaptain}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          type={team.type === "STOCK" ? "primary" : "warning"}
-                        >
-                          {team.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          type={
-                            team.status === "active" ? "success" : "neutral"
-                          }
-                        >
-                          {team.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="">
-                        {new Date(team.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          layout="link"
-                          size="small"
-                          className=""
-                          onClick={() => {
-                            /* Show team details modal */
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+              <TableBody>
+                {teams.map((team) => (
+                  <TableRow key={team._id} className="">
+                    <TableCell>
+                      <div className="flex flex-col ">
+                        <span className="text-sm">
+                          {team.userId?.fullName}
+                        </span>
+                        <span className="text-xs text-gray-300">
+                          @{team.userId?.username}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col ">
+                        <span className="text-sm">
+                          {team.contestId?.name}
+                        </span>
+                        <span className="text-xs text-gray-300">
+                          Entry: ₹{team.contestId?.entryFee}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{team.captain}</TableCell>
+                    <TableCell className="text-sm">
+                      {team.viceCaptain}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        type={team.type === "STOCK" ? "primary" : "warning"}
+                      >
+                        {team.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        type={
+                          team.status === "active" ? "success" : "neutral"
+                        }
+                      >
+                        {team.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(team.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        layout="link"
+                        size="small"
+                        className=""
+                        onClick={() => {
+                          /* Show team details modal */
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
             <TableFooter>
               <Pagination
-                totalResults={teams.length}
+                totalResults={totalResults}
                 resultsPerPage={resultsPerPage}
                 onChange={setPage}
                 label="Team navigation"

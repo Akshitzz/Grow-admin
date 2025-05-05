@@ -26,8 +26,10 @@ function Contests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
   const [deleteModal, setDeleteModal] = useState(false);
   const [contestToDelete, setContestToDelete] = useState(null);
+  const resultsPerPage = 10;
 
   // const API_URL = process.env.API_URL || "https://growupp.onrender.com/api";
   // const API_URL = process.env.API_URL || "http://localhost:3000/api";
@@ -42,11 +44,22 @@ function Contests() {
       setError(null);
 
       const data = await api.getAdminContests();
-      setContests(data.data);
+      if (!data || !data.data) {
+        throw new Error("Invalid response format");
+      }
+
+      // Calculate pagination
+      const startIndex = (page - 1) * resultsPerPage;
+      const endIndex = startIndex + resultsPerPage;
+      const paginatedContests = data.data.slice(startIndex, endIndex);
+      
+      setContests(paginatedContests);
+      setTotalResults(data.data.length);
     } catch (error) {
       console.error("Error fetching contests:", error);
       setError(error.message);
       setContests([]);
+      setTotalResults(0);
     } finally {
       setLoading(false);
     }
@@ -202,8 +215,8 @@ function Contests() {
           </Table>
           <TableFooter>
             <Pagination
-              totalResults={100}
-              resultsPerPage={10}
+              totalResults={totalResults}
+              resultsPerPage={resultsPerPage}
               onChange={setPage}
               label="Table navigation"
             />
