@@ -26,6 +26,7 @@ function ContestDetails() {
   const [contest, setContest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fillingBots, setFillingBots] = useState(false);
 
   useEffect(() => {
     // Immediately redirect if it's a create-mega route
@@ -67,6 +68,22 @@ function ContestDetails() {
     fetchContestDetails();
   }, [id, history]);
 
+  const handleFillWithBots = async () => {
+    try {
+      setFillingBots(true);
+      await api.fillWithBots(id);
+      // Refresh contest details after filling with bots
+      const response = await api.getAdminContestDetails(id);
+      setContest(response.data);
+      alert("Successfully added bots to the contest!");
+    } catch (error) {
+      console.error("Error filling with bots:", error);
+      alert(error.message || "Failed to add bots to the contest");
+    } finally {
+      setFillingBots(false);
+    }
+  };
+
   // If we're redirecting, don't render anything
   if (id === 'create-mega') {
     return null;
@@ -105,6 +122,16 @@ function ContestDetails() {
   return (
     <>
       <PageTitle>{contest.name}</PageTitle>
+
+      <div className="flex justify-end mb-4">
+        <Button
+          onClick={handleFillWithBots}
+          disabled={fillingBots || contest.participantsCount >= contest.maxParticipants}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          {fillingBots ? "Adding Bots..." : "Fill with Bots"}
+        </Button>
+      </div>
 
       <div className="grid gap-6 mb-8 md:grid-cols-2">
         <Card className="text-white">

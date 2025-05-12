@@ -184,4 +184,10 @@ export default {
       method: "POST",
       body: JSON.stringify(credentials),
     }),
+
+  // Add fillWithBots endpoint
+  fillWithBots: (contestId) =>
+    apiCall(`/contests/${contestId}/fill-with-bots`, {
+      method: "POST",
+    }),
 };
