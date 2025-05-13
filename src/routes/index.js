@@ -14,6 +14,7 @@ const Blank = lazy(() => import("../pages/Blank"));
 // Add Contests imports
 const Contests = lazy(() => import("../pages/Contests"));
 const CreateContest = lazy(() => import("../pages/CreateContest"));
+const CreateMegaContest = lazy(() => import("../pages/CreateMegaContest"));
 const ContestDetails = lazy(() => import("../pages/ContestDetails"));
 const EditContest = lazy(() => import("../pages/EditContest"));
 
@@ -39,9 +40,6 @@ const Leaderboard = lazy(() => import("../pages/Leaderboard"));
 const PrivacyPolicy = lazy(() => import("../pages/privacy-policy"));
 const RefundPolicy = lazy(() => import("../pages/refund-policy"));
 const TermsConditions = lazy(() => import("../pages/tnc"));
-
-// Add CreateMegaContest import
-const CreateMegaContest = lazy(() => import("../pages/CreateMegaContest"));
 
 /**
  * ⚠ These are internal routes!
@@ -115,6 +113,11 @@ const routes = [
     exact: true,
   },
   {
+    path: "/contests/create-mega",
+    component: CreateMegaContest,
+    exact: true,
+  },
+  {
     path: "/contests/:id",
     component: ContestDetails,
     exact: true,
@@ -172,11 +175,6 @@ const routes = [
   {
     path: "/leaderboard",
     component: Leaderboard,
-    exact: true,
-  },
-  {
-    path: "/contests/create-mega",
-    component: CreateMegaContest,
     exact: true,
   },
 ];

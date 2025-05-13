@@ -85,9 +85,9 @@ function ContestDetails() {
   };
 
   // If we're redirecting, don't render anything
-  if (id === 'create-mega') {
-    return null;
-  }
+  // if (id === 'create-mega') {
+  //   return null;
+  // }
 
   if (loading) {
     return (

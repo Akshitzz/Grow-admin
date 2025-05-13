@@ -8,28 +8,37 @@ import {
   Input,
   Label,
   Select,
-  Textarea,
-  ToggleSwitch,
 } from "@windmill/react-ui";
 import api from "../utils/api";
+
+// Utility: Convert Date to IST and format as yyyy-MM-ddTHH:mm for datetime-local input
+function toISTLocalString(date) {
+  const IST_OFFSET = 5.5 * 60; // minutes
+  // Convert to IST
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+  const ist = new Date(utc + (IST_OFFSET * 60000));
+  // Format for datetime-local input
+  const yyyy = ist.getFullYear();
+  const MM = String(ist.getMonth() + 1).padStart(2, '0');
+  const dd = String(ist.getDate()).padStart(2, '0');
+  const hh = String(ist.getHours()).padStart(2, '0');
+  const mm = String(ist.getMinutes()).padStart(2, '0');
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+}
 
 function CreateMegaContest() {
   const history = useHistory();
   const [leagues, setLeagues] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     leagueId: "",
     name: "",
     description: "",
     type: "STOCK",
     entryFee: "",
-    maxParticipants: 100,
-    startDate: new Date().toISOString().slice(0, 16),
-    endDate: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-    stockSelectionDeadline: new Date().toISOString().slice(0, 16),
-    status: "upcoming",
-    megaContest: true,
+    maxParticipants: 2,
+    startDate: toISTLocalString(new Date()),
+    endDate: toISTLocalString(new Date(Date.now() + 86400000)),
+    stockSelectionDeadline: toISTLocalString(new Date()),
     prizePool: {
       totalAmount: 0,
       distribution: [
@@ -38,86 +47,71 @@ function CreateMegaContest() {
         { rank: 3, percentage: 20, amount: 0 },
       ],
     },
+    status: "upcoming",
+    megaContest: true,
   });
 
   useEffect(() => {
+    // Fetch leagues when component mounts
     const fetchLeagues = async () => {
       try {
         const response = await api.getLeagues();
         setLeagues(response.data);
       } catch (error) {
         console.error("Error fetching leagues:", error);
-        setError("Failed to load leagues");
       }
     };
     fetchLeagues();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handlePrizeDistributionChange = (index, field, value) => {
-    const newDistribution = [...formData.prizePool.distribution];
-    newDistribution[index] = {
-      ...newDistribution[index],
-      [field]: Number(value),
-    };
-    setFormData((prev) => ({
-      ...prev,
-      prizePool: {
-        ...prev.prizePool,
-        distribution: newDistribution,
-      },
-    }));
+  // Always treat input as IST string
+  const handleDateChange = (field, value) => {
+    setFormData((prev) => {
+      let updates = { ...prev, [field]: value };
+      // Ensure logical date order (all values are IST strings)
+      if (field === "startDate" && value > prev.endDate) {
+        updates.endDate = value;
+        updates.stockSelectionDeadline = value;
+      }
+      if (field === "endDate" && value < prev.startDate) {
+        updates.endDate = prev.startDate;
+      }
+      if (field === "stockSelectionDeadline") {
+        if (value < prev.startDate) {
+          updates.stockSelectionDeadline = prev.startDate;
+        }
+        if (value > prev.endDate) {
+          updates.stockSelectionDeadline = prev.endDate;
+        }
+      }
+      return updates;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
     try {
-      // Validate form data
-      if (!formData.name || !formData.entryFee || !formData.maxParticipants || 
-          !formData.startDate || !formData.endDate || !formData.stockSelectionDeadline || 
-          !formData.leagueId) {
-        throw new Error("Please fill in all required fields");
-      }
-
-      // Format dates and numbers
-      const formattedData = {
-        ...formData,
-        startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
-        stockSelectionDeadline: new Date(formData.stockSelectionDeadline).toISOString(),
-        entryFee: Number(formData.entryFee),
-        maxParticipants: Number(formData.maxParticipants),
-        megaContest: true,
-        prizePool: {
-          ...formData.prizePool,
-          totalAmount: Number(formData.prizePool.totalAmount),
-          distribution: formData.prizePool.distribution.map(prize => ({
-            ...prize,
-            percentage: Number(prize.percentage),
-            amount: Number(prize.amount)
-          }))
-        }
+      // Convert IST datetime-local strings to ISO8601 with +05:30 offset before sending
+      const convertToISTISOString = (dtStr) => {
+        // dtStr is in 'yyyy-MM-ddTHH:mm' assumed IST, so manually add offset
+        return dtStr + ":00+05:30";
       };
 
-      console.log("Submitting mega contest data:", formattedData);
-      await api.createContest(formattedData);
-      alert("Mega contest created successfully!");
+      const payload = {
+        ...formData,
+        startDate: convertToISTISOString(formData.startDate),
+        endDate: convertToISTISOString(formData.endDate),
+        stockSelectionDeadline: convertToISTISOString(formData.stockSelectionDeadline),
+        megaContest: true, // Always set to true for mega contests
+      };
+
+      console.log("Sending megaContest value:", payload.megaContest);
+
+      const response = await api.createContest(payload);
       history.push("/app/contests");
     } catch (error) {
-      console.error("Error creating contest:", error);
-      setError(error.message || "Failed to create contest");
-    } finally {
-      setLoading(false);
+      console.error("Error creating mega contest:", error);
+      alert(error.message || "Failed to create mega contest");
     }
   };
 
@@ -127,35 +121,57 @@ function CreateMegaContest() {
 
       <Card className="mb-8">
         <CardBody>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <Label>
-                <span>Contest Name *</span>
-                <Input
-                  className="mt-1"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter contest name"
-                  required
-                />
-              </Label>
-
-              <Label>
-                <span>League *</span>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Label className="col-span-2">
+                <span>Select League *</span>
                 <Select
                   className="mt-1"
-                  name="leagueId"
                   value={formData.leagueId}
-                  onChange={handleInputChange}
+                  onChange={(e) =>
+                    setFormData({ ...formData, leagueId: e.target.value })
+                  }
                   required
                 >
                   <option value="">Select a league</option>
                   {leagues.map((league) => (
                     <option key={league._id} value={league._id}>
-                      {league.name}
+                      {league.name} ({league.type})
                     </option>
                   ))}
+                </Select>
+              </Label>
+            </div>
+
+            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">
+              Basic Information
+            </h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Label className="col-span-2">
+                <span>Contest Name *</span>
+                <Input
+                  className="mt-1"
+                  placeholder="Enter contest name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  required
+                />
+              </Label>
+
+              <Label>
+                <span>Type *</span>
+                <Select
+                  className="mt-1"
+                  value={formData.type}
+                  onChange={(e) =>
+                    setFormData({ ...formData, type: e.target.value })
+                  }
+                  required
+                >
+                  <option value="STOCK">Stock</option>
+                  <option value="CRYPTO">Crypto</option>
                 </Select>
               </Label>
 
@@ -164,36 +180,74 @@ function CreateMegaContest() {
                 <Input
                   className="mt-1"
                   type="number"
-                  name="entryFee"
-                  value={formData.entryFee}
-                  onChange={handleInputChange}
+                  min="0"
                   placeholder="Enter entry fee"
+                  value={formData.entryFee}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      entryFee: e.target.value === "" ? "" : Number(e.target.value),
+                    })
+                  }
                   required
                 />
               </Label>
 
               <Label>
-                <span>Max Participants *</span>
+                <span>Max Participants (2-100) *</span>
                 <Input
                   className="mt-1"
                   type="number"
-                  name="maxParticipants"
+                  min="2"
+                  max="100"
                   value={formData.maxParticipants}
-                  onChange={handleInputChange}
-                  placeholder="Enter max participants"
-                  min="100"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      maxParticipants: e.target.value === "" ? "" : Number(e.target.value),
+                    })
+                  }
                   required
                 />
               </Label>
 
+              <Label>
+                <span>Prize Pool (₹) *</span>
+                <Input
+                  className="mt-1"
+                  type="number"
+                  min="0"
+                  value={formData.prizePool.totalAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      prizePool: {
+                        ...formData.prizePool,
+                        totalAmount: e.target.value === "" ? "" : Number(e.target.value),
+                      },
+                    })
+                  }
+                  required
+                />
+              </Label>
+            </div>
+
+            <hr className="my-8" />
+
+            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">
+              Contest Timing
+            </h2>
+            <div className="grid gap-6 md:grid-cols-3">
               <Label>
                 <span>Start Date *</span>
                 <Input
                   className="mt-1"
                   type="datetime-local"
-                  name="startDate"
+                  min={toISTLocalString(new Date())}
                   value={formData.startDate}
-                  onChange={handleInputChange}
+                  onChange={(e) =>
+                    handleDateChange("startDate", e.target.value)
+                  }
                   required
                 />
               </Label>
@@ -203,9 +257,9 @@ function CreateMegaContest() {
                 <Input
                   className="mt-1"
                   type="datetime-local"
-                  name="endDate"
+                  min={formData.startDate}
                   value={formData.endDate}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleDateChange("endDate", e.target.value)}
                   required
                 />
               </Label>
@@ -215,83 +269,43 @@ function CreateMegaContest() {
                 <Input
                   className="mt-1"
                   type="datetime-local"
-                  name="stockSelectionDeadline"
+                  min={formData.startDate}
+                  max={formData.endDate}
                   value={formData.stockSelectionDeadline}
-                  onChange={handleInputChange}
+                  onChange={(e) =>
+                    handleDateChange("stockSelectionDeadline", e.target.value)
+                  }
                   required
                 />
               </Label>
-
-              <Label>
-                <span>Contest Type</span>
-                <Select
-                  className="mt-1"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                >
-                  <option value="STOCK">Stock</option>
-                  <option value="CRYPTO">Crypto</option>
-                </Select>
-              </Label>
             </div>
 
-            <Label className="mb-4">
-              <span>Description</span>
-              <Textarea
-                className="mt-1"
-                name="description"
+            <hr className="my-8" />
+
+            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">
+              Contest Description
+            </h2>
+            <Label>
+              <span>Description *</span>
+              <textarea
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 focus:border-purple-400 focus:ring focus:ring-purple-300 dark:focus:ring-gray-300 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300"
+                rows="5"
                 value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Enter contest description"
-                rows="3"
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                required
               />
             </Label>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">Prize Distribution</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {formData.prizePool.distribution.map((prize, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <Label>
-                      <span>Rank {prize.rank}</span>
-                      <Input
-                        className="mt-1"
-                        type="number"
-                        value={prize.percentage}
-                        onChange={(e) =>
-                          handlePrizeDistributionChange(
-                            index,
-                            "percentage",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Percentage"
-                        min="0"
-                        max="100"
-                      />
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {error && (
-              <div className="text-red-600 mb-4">
-                {error}
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-4 mt-8">
               <Button
                 layout="outline"
                 onClick={() => history.push("/app/contests")}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create Mega Contest"}
-              </Button>
+              <Button type="submit">Create Mega Contest</Button>
             </div>
           </form>
         </CardBody>

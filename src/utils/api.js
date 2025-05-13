@@ -47,13 +47,8 @@ export default {
       startDate: data.startDate,
       endDate: data.endDate,
       stockSelectionDeadline: data.stockSelectionDeadline,
-      megaContest: data.megaContest || false,
+      megaContest: data.megaContest === true, // Convert to boolean
     };
-
-    console.log(
-      "Sending contest data with correct field names:",
-      formattedData
-    );
 
     return apiCall("/contests/create", {
       method: "POST",

@@ -65,16 +65,20 @@ function Contests() {
     }
   };
 
-  const handleViewContest = (id) => {
-    history.push(`/app/contests/${id}`);
+  const handleViewContest = (contestId) => {
+    history.push(`/app/contests/${contestId}`);
   };
 
-  const handleEditContest = (id) => {
-    history.push(`/app/contests/edit/${id}`);
+  const handleEditContest = (contestId) => {
+    history.push(`/app/contests/edit/${contestId}`);
   };
 
   const handleCreateContest = () => {
     history.push("/app/contests/create");
+  };
+
+  const handleCreateMegaContest = () => {
+    history.push("/app/contests/create-mega");
   };
 
   const handleDeleteClick = (contest) => {
@@ -102,7 +106,7 @@ function Contests() {
       <div className="flex justify-between mb-8">
         <div className="space-x-4">
           <Button onClick={handleCreateContest}>Create Contest</Button>
-          <Button onClick={() => history.push("/app/contests/create-mega")}>
+          <Button onClick={handleCreateMegaContest}>
             Create Mega Contest
           </Button>
         </div>

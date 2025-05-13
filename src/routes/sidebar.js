@@ -17,20 +17,14 @@ const routes = [
     name: "Users",
   },
   {
-    path: "/app/leagues", // the url
-    icon: "FormsIcon", // the component being exported from icons/index.js
-    name: "Leagues", // name that appear in Sidebar
+    path: "/app/leagues",
+    icon: "FormsIcon",
+    name: "Leagues",
   },
   {
     path: "/app/contests",
-    icon: "MoneyIcon", // Using MoneyIcon for contests
+    icon: "MoneyIcon",
     name: "Contests",
-    routes: [
-      {
-        path: "/app/contests/create-mega",
-        name: "Create Mega Contest",
-      },
-    ],
   },
   {
     path: "/app/teams",
