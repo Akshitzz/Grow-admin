@@ -69,19 +69,26 @@ function CreateMegaContest() {
     setFormData((prev) => {
       let updates = { ...prev, [field]: value };
       // Ensure logical date order (all values are IST strings)
-      if (field === "startDate" && value > prev.endDate) {
-        updates.endDate = value;
-        updates.stockSelectionDeadline = value;
+      if (field === "startDate") {
+        // If start date is changed, ensure end date and stock selection deadline are after it
+        if (value > prev.endDate) {
+          updates.endDate = value;
+        }
+        // Stock selection deadline must be before start date
+        if (value < prev.stockSelectionDeadline) {
+          updates.stockSelectionDeadline = value;
+        }
       }
-      if (field === "endDate" && value < prev.startDate) {
-        updates.endDate = prev.startDate;
+      if (field === "endDate") {
+        // End date must be after start date
+        if (value < prev.startDate) {
+          updates.endDate = prev.startDate;
+        }
       }
       if (field === "stockSelectionDeadline") {
-        if (value < prev.startDate) {
+        // Stock selection deadline must be before start date
+        if (value > prev.startDate) {
           updates.stockSelectionDeadline = prev.startDate;
-        }
-        if (value > prev.endDate) {
-          updates.stockSelectionDeadline = prev.endDate;
         }
       }
       return updates;
